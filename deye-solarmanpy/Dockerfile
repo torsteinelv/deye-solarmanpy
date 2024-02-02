@@ -5,16 +5,12 @@ FROM $BUILD_FROM
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
 # Install requirements for add-on
-RUN \
-    apk update && \
+RUN apk update && \
     apk add --no-cache \
         python3 \
         py3-pip && \
-    pip3 install pysolarmanv5 \
-    && pip3 install requests \
-    && pip3 install websockets \
-    && pip3 install asyncio \
-    && pip3 install asyncws
+    pip3 install --upgrade pip && \
+    pip3 install pysolarmanv5 requests websockets asyncio asyncws
 
 # Copy data for add-on
 COPY script.py /
@@ -25,4 +21,4 @@ RUN chmod a+x /script.py /run.sh
 ENV SUPERVISOR_TOKEN=${SUPERVISOR_TOKEN}
 
 # Start the shell script
-CMD [ "/run.sh" ]
+CMD ["/run.sh"]
