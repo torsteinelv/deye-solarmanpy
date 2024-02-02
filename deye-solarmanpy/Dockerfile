@@ -6,6 +6,7 @@ SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
 # Install requirements for add-on
 RUN \
+    apt-get update \
     apk add --no-cache \
         python3 \
         py3-pip \
