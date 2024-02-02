@@ -1,4 +1,4 @@
 # https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
-name: Home Assistant addon for controlling deye inverteres
-url: 'https://github.com/torsteinelv/deye-solarmanpy'
+name: Home Assistant addons managed by torstein
+url: 'https://github.com/torsteinelv/tte-home-assistant-addons'
 maintainer: Torstein Thorsland Elvenes <torstein@thorsland.net>
