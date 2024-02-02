@@ -3,6 +3,7 @@ import os
 import sys
 import logging
 from pysolarmanv5 import PySolarmanV5
+from datetime import datetime
 import time
 import json
 
@@ -72,7 +73,12 @@ while True:
             logger.info(f"State changed! New state: {state}")
 
             # Convert state to a float
-            state_float = float(state)
+            try:
+                state_float = float(state)
+            except ValueError:
+                logger.warning("Failed to convert state to float. Skipping iteration.")
+                time.sleep(60)
+                continue
 
             # Calculate voltage from state
             def input_to_voltage(input_val):
@@ -108,12 +114,18 @@ while True:
                 else:
                     logger.warning("Write to the inverter failed!")
 
-        state2 = int(state2)
-        if state2 != prev_state2:
-            logger.info(f"State2 changed! New state: {state2} / {prev_state2}")
-            state2 = int(state2)
+        # Convert state2 to float
+        try:
+            state2_float = float(state2)
+        except ValueError:
+            logger.warning("Failed to convert state2 to float. Skipping iteration.")
+            time.sleep(60)
+            continue
 
-            if state2 > 40:
+        if state2_float != prev_state2:
+            logger.info(f"State2 changed! New state: {state2_float} / {prev_state2}")
+
+            if state2_float > 40:
                 logger.warning("Input value2 is outside of the valid range (0-40)")
                 continue
 
@@ -123,15 +135,15 @@ while True:
             # Read the current value from the inverter
             read = modbus.read_holding_registers(register_addr=210, quantity=1)
 
-            if read[0] == state2:
-                logger.info(f"Skipping write, same value ({read[0]} amps {state2})")
-                prev_state2 = state2
+            if read[0] == state2_float:
+                logger.info(f"Skipping write, same value ({read[0]} amps {state2_float})")
+                prev_state2 = state2_float
             # Otherwise, write the new value
             else:
-                write = modbus.write_multiple_holding_registers(register_addr=210, values=[state2])
+                write = modbus.write_multiple_holding_registers(register_addr=210, values=[state2_float])
                 if write == 1:
-                    logger.info(f"Write to the inverter successful, new amp now: {state2}")
-                    prev_state2 = state2
+                    logger.info(f"Write to the inverter successful, new amp now: {state2_float}")
+                    prev_state2 = state2_float
                 else:
                     logger.warning("Write to the inverter failed!")
 
