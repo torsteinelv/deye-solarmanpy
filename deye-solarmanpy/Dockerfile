@@ -5,12 +5,13 @@ FROM $BUILD_FROM
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
 # Install requirements for add-on
-RUN apk update && \
+RUN \
+    apk update && \
     apk add --no-cache \
         python3 \
         py3-pip && \
-    pip3 install --upgrade pip \
-    pip3 install pysolarmanv5 requests websockets asyncio asyncws
+    pip3 install --upgrade pip && \
+    pip3 install pysolarmanv5 requests websockets asyncws
 
 # Copy data for add-on
 COPY script.py /
