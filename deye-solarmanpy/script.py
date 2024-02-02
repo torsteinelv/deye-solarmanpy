@@ -20,6 +20,12 @@ token = os.environ.get("SUPERVISOR_TOKEN")
 ip_address = os.environ.get("MY_ADDON_IP_ADDRESS")
 serial_number = os.environ.get("MY_ADDON_SERIAL_NUMBER")
 
+# Check if ip_address and serial_number are not None
+if ip_address is None or serial_number is None:
+    logger.error("Configuration values 'ip_address' or 'serial_number' are missing.")
+    sys.exit(1)
+
+
 print(token + ": " + str(ip_address) + ", " + str(serial_number))
 
 # Configure logging
