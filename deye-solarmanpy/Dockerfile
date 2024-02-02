@@ -1,5 +1,5 @@
 ARG BUILD_FROM
-FROM $BUILD_FROM
+FROM ${BUILD_FROM}
 
 # Set shell
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
