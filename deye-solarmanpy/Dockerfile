@@ -6,11 +6,11 @@ SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
 # Install requirements for add-on
 RUN \
-    apt-get update \
+    apk update && \
     apk add --no-cache \
         python3 \
-        py3-pip \
-    && pip3 install pysolarmanv5 \
+        py3-pip && \
+    pip3 install pysolarmanv5 \
     && pip3 install requests \
     && pip3 install websockets \
     && pip3 install asyncio \
