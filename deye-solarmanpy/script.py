@@ -30,7 +30,7 @@ serial_number = config_data.get("serialnumber")
 
 # Check if ip_address and serial_number are not None
 if ip_address is None or serial_number is None:
-    logger.error("Configuration values 'ip_address' or 'serial_number' are missing.")
+    print("Configuration values 'ip_address' or 'serial_number' are missing.")
     sys.exit(1)
 
 print(f"{token}: {ip_address}, {serial_number}")
@@ -64,14 +64,14 @@ while True:
 
         # If the states have not changed, skip this iteration
         if state == prev_state and state2 == prev_state2:
-            logger.debug("States have not changed, skipping iteration")
+            print("States have not changed, skipping iteration")
             time.sleep(60)
             continue
 
         # Rest of your script...
 
     except Exception as e:
-        logger.error(f"An error occurred: {e}")
+        print(f"An error occurred: {e}")
 
     # Pause for 1 minute
     time.sleep(60)
