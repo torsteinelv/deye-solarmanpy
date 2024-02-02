@@ -12,3 +12,6 @@ arch:
 hassio_role: default
 homeassistant_api: true
 hassio_api: true
+options:
+  ip: 192.168.1.100
+  serialnumber: 000000
