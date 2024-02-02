@@ -20,7 +20,7 @@ token = os.environ.get("SUPERVISOR_TOKEN")
 ip_address = os.environ.get("MY_ADDON_IP_ADDRESS")
 serial_number = os.environ.get("MY_ADDON_SERIAL_NUMBER")
 
-
+print(token + ": " + str(ip_address) + ", " + str(serial_number))
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -40,7 +40,6 @@ headers = {
     "Authorization": f"Bearer {token}",
     "Content-Type": "application/json",
 }
-
 
 while True:
     try:
@@ -88,47 +87,43 @@ while True:
 
             # If current value matches the desired value, skip write
             if read[0] == voltage:
-              logger.info(f"Skipping write, same value({read[0]} voltage)")
-              prev_state = state
+                logger.info(f"Skipping write, same value({read[0]} voltage)")
+                prev_state = state
             # Otherwise, write the new value
             else:
-              write = modbus.write_multiple_holding_registers(register_addr=262, values=[voltage])
-              if write == 1:
-                logger.info(f"Write to inverter successful, new voltage: {voltage}")
-                prev_state = state
-              else:
-                logger.warning("Write to inverter failed!")
+                write = modbus.write_multiple_holding_registers(register_addr=262, values=[voltage])
+                if write == 1:
+                    logger.info(f"Write to inverter successful, new voltage: {voltage}")
+                    prev_state = state
+                else:
+                    logger.warning("Write to inverter failed!")
+
         state2 = int(state2)
         if state2 != prev_state2:
             logger.info(f"State2 changed! New state: {state2} / {prev_state2}")
             state2 = int(state2)
-
 
             if state2 > 40:
                 logger.warning("Input value2 is outside of valid range (0-40)")
                 continue
 
             # Call main function to send update to inverter for state2
-#            main(register_addr=210, value=state2)
             modbus = PySolarmanV5(ip_address, serial_number, port=8899, mb_slave_id=1, verbose=False)
 
-    # Read current value from inverter
+            # Read current value from inverter
             read = modbus.read_holding_registers(register_addr=210, quantity=1)
 
-
             if read[0] == state2:
-              logger.info(f"Skipping write, same value({read[0]} amps {state2})")
-              prev_state2 = state2
-    # Otherwise, write the new value
-            else:
-
-              write = modbus.write_multiple_holding_registers(register_addr=210, values=[state2])
-              if write == 1:
-                logger.info(f"Write to inverter successful, new amp now: {state2}")
+                logger.info(f"Skipping write, same value({read[0]} amps {state2})")
                 prev_state2 = state2
-              else:
-                logger.warning("Write to inverter failed!")
-
+            # Otherwise, write the new value
+            else:
+                write = modbus.write_multiple_holding_registers(register_addr=210, values=[state2])
+                if write == 1:
+                    logger.info(f"Write to inverter successful, new amp now: {state2}")
+                    prev_state2 = state2
+                else:
+                    logger.warning("Write to inverter failed!")
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
