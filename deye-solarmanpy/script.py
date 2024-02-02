@@ -17,6 +17,10 @@ hass_deye_charge_amps = "input_text.emhass_deye_charge_amps"
 
 # Access token for authentication
 token = os.environ.get("SUPERVISOR_TOKEN")
+ip_address = os.environ.get("MY_ADDON_IP_ADDRESS")
+serial_number = os.environ.get("MY_ADDON_SERIAL_NUMBER")
+
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -75,7 +79,7 @@ while True:
                 continue
 
             # Call main function to send update to inverter for state1
-            modbus = PySolarmanV5("10.10.12.24", , port=8899, mb_slave_id=1, verbose=False)
+            modbus = PySolarmanV5(ip_address, serial_number, port=8899, mb_slave_id=1, verbose=False)
 
             # Read current value from inverter
             read = modbus.read_holding_registers(register_addr=262, quantity=1)
@@ -106,7 +110,7 @@ while True:
 
             # Call main function to send update to inverter for state2
 #            main(register_addr=210, value=state2)
-            modbus = PySolarmanV5("10.10.12.24", 2338439962, port=8899, mb_slave_id=1, verbose=False)
+            modbus = PySolarmanV5(ip_address, serial_number, port=8899, mb_slave_id=1, verbose=False)
 
     # Read current value from inverter
             read = modbus.read_holding_registers(register_addr=210, quantity=1)
