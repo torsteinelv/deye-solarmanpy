@@ -25,8 +25,8 @@ with open(config_path, "r") as file:
 
 # Access and print specific values
 token = os.environ.get("SUPERVISOR_TOKEN")
-ip_address = config_data.get("ip")
-serial_number = config_data.get("serialnumber")
+ip_address = int(config_data.get("ip", 0))  
+serial_number = int(config_data.get("serialnumber", 0)) 
 
 # Check if ip_address and serial_number are not None
 if ip_address is None or serial_number is None:
