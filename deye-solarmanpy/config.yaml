@@ -1,0 +1,11 @@
+name: "Deye-solarmanpy"
+description: "Addon to control deye inverters"
+version: "1.0.0"
+slug: "deye-solarmanpy"
+init: false
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
