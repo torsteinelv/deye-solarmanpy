@@ -34,6 +34,7 @@ def get_inverter_values(ip_address, serial_number):
 
 def update_inverter_register(modbus, register_addr, new_value):
     """Update register value in the inverter."""
+    modbus = PySolarmanV5(ip_address, serial_number, port=8899, mb_slave_id=1, verbose=False)
     write = modbus.write_multiple_holding_registers(register_addr, values=[new_value])
     return write
 
