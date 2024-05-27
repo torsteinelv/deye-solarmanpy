@@ -3,7 +3,6 @@ import os
 import sys
 import logging
 from pysolarmanv5 import PySolarmanV5
-from datetime import datetime
 import time
 import json
 
@@ -144,10 +143,12 @@ def main():
             time.sleep(60)
             continue
 
-        if state2_float != prev_state2:
-            logger.info(f"State2 changed! New state: {state2_float} / {prev_state2}")
+        state2_int = int(state2_float)  # Convert state2 to integer
 
-            if 0 <= state2_float <= 40:
+        if state2_int != prev_state2:
+            logger.info(f"State2 changed! New state: {state2_int} / {prev_state2}")
+
+            if 0 <= state2_int <= 40:
                 try:
                     # Call the main function to send an update to the inverter for state2
                     modbus = get_inverter_values(ip_address, serial_number)
@@ -156,15 +157,15 @@ def main():
                     read = modbus.read_holding_registers(register_addr=210, quantity=1)
 
                     # If the current value matches the desired value, skip the write
-                    if read[0] == state2_float:
-                        logger.info(f"Skipping write, same value ({read[0]} amps {state2_float})")
-                        prev_state2 = state2_float
+                    if read[0] == state2_int:
+                        logger.info(f"Skipping write, same value ({read[0]} amps {state2_int})")
+                        prev_state2 = state2_int
                     # Otherwise, write the new value
                     else:
-                        write = update_inverter_register(modbus, register_addr=210, new_value=state2_float)
+                        write = update_inverter_register(modbus, register_addr=210, new_value=state2_int)
                         if write == 1:
-                            logger.info(f"Write to the inverter successful, new amp now: {state2_float}")
-                            prev_state2 = state2_float
+                            logger.info(f"Write to the inverter successful, new amp now: {state2_int}")
+                            prev_state2 = state2_int
                         else:
                             logger.warning("Write to the inverter failed!")
                 except Exception as e:
