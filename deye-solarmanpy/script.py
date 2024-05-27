@@ -29,21 +29,26 @@ def get_environment_variable(key, default=None):
 
 def get_inverter_values(ip_address, serial_number):
     """Get current values from the inverter."""
-    modbus = PySolarmanV5(ip_address, serial_number, port=8899, mb_slave_id=1, verbose=False)
-    return modbus
+    return PySolarmanV5(ip_address, serial_number, port=8899, mb_slave_id=1, verbose=False)
 
 def update_inverter_register(modbus, register_addr, new_value):
     """Update register value in the inverter."""
-    modbus = PySolarmanV5(ip_address, serial_number, port=8899, mb_slave_id=1, verbose=False)
     write = modbus.write_multiple_holding_registers(register_addr, values=[new_value])
     return write
 
 def main():
     # Define the path to the JSON file
-    config_path = "/data/options.json"
+    config_path = get_environment_variable("CONFIG_PATH", "/data/options.json")
 
     # Load configuration
-    config_data = load_config(config_path)
+    try:
+        config_data = load_config(config_path)
+    except FileNotFoundError:
+        logger.error(f"Configuration file not found: {config_path}")
+        sys.exit(1)
+    except json.JSONDecodeError:
+        logger.error(f"Error decoding JSON configuration file: {config_path}")
+        sys.exit(1)
 
     # Access specific values from the configuration
     token = get_environment_variable("SUPERVISOR_TOKEN")
@@ -70,9 +75,17 @@ def main():
 
     # Main loop
     while True:
-        # Send HTTP GET requests to Home Assistant API to retrieve the states
-        response = requests.get(f"{url}/states/{entity_id}", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-        response2 = requests.get(f"{url}/states/{hass_deye_charge_amps}", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+        try:
+            # Send HTTP GET requests to Home Assistant API to retrieve the states
+            response = requests.get(f"{url}/states/{entity_id}", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+            response2 = requests.get(f"{url}/states/{hass_deye_charge_amps}", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+
+            response.raise_for_status()
+            response2.raise_for_status()
+        except requests.RequestException as e:
+            logger.error(f"HTTP request error: {e}")
+            time.sleep(60)
+            continue
 
         # Extract the states from the response JSON
         state = response.json().get("state")
@@ -101,25 +114,28 @@ def main():
             voltage = round(voltage)
 
             if 20 <= input_val <= 90:
-                # Call the main function to send an update to the inverter for state1
-                modbus = get_inverter_values(ip_address, serial_number)
+                try:
+                    # Call the main function to send an update to the inverter for state1
+                    modbus = get_inverter_values(ip_address, serial_number)
 
-                # Read the current value from the inverter
-                read = modbus.read_holding_registers(register_addr=262, quantity=1)
-                logger.debug(f"Current voltage on the inverter: {read[0]}")
+                    # Read the current value from the inverter
+                    read = modbus.read_holding_registers(register_addr=262, quantity=1)
+                    logger.debug(f"Current voltage on the inverter: {read[0]}")
 
-                # If the current value matches the desired value, skip the write
-                if read[0] == voltage:
-                    logger.info(f"Skipping write, same value ({read[0]} voltage)")
-                    prev_state = state
-                # Otherwise, write the new value
-                else:
-                    write = update_inverter_register(modbus, register_addr=262, new_value=voltage)
-                    if write == 1:
-                        logger.info(f"Write to the inverter successful, new voltage: {voltage}")
+                    # If the current value matches the desired value, skip the write
+                    if read[0] == voltage:
+                        logger.info(f"Skipping write, same value ({read[0]} voltage)")
                         prev_state = state
+                    # Otherwise, write the new value
                     else:
-                        logger.warning("Write to the inverter failed!")
+                        write = update_inverter_register(modbus, register_addr=262, new_value=voltage)
+                        if write == 1:
+                            logger.info(f"Write to the inverter successful, new voltage: {voltage}")
+                            prev_state = state
+                        else:
+                            logger.warning("Write to the inverter failed!")
+                except Exception as e:
+                    logger.error(f"Error interacting with inverter: {e}")
 
         try:
             state2_float = float(state2)
@@ -132,24 +148,27 @@ def main():
             logger.info(f"State2 changed! New state: {state2_float} / {prev_state2}")
 
             if 0 <= state2_float <= 40:
-                # Call the main function to send an update to the inverter for state2
-                modbus = get_inverter_values(ip_address, serial_number)
+                try:
+                    # Call the main function to send an update to the inverter for state2
+                    modbus = get_inverter_values(ip_address, serial_number)
 
-                # Read the current value from the inverter
-                read = modbus.read_holding_registers(register_addr=210, quantity=1)
+                    # Read the current value from the inverter
+                    read = modbus.read_holding_registers(register_addr=210, quantity=1)
 
-                # If the current value matches the desired value, skip the write
-                if read[0] == state2_float:
-                    logger.info(f"Skipping write, same value ({read[0]} amps {state2_float})")
-                    prev_state2 = state2_float
-                # Otherwise, write the new value
-                else:
-                    write = update_inverter_register(modbus, register_addr=210, new_value=state2_float)
-                    if write == 1:
-                        logger.info(f"Write to the inverter successful, new amp now: {state2_float}")
+                    # If the current value matches the desired value, skip the write
+                    if read[0] == state2_float:
+                        logger.info(f"Skipping write, same value ({read[0]} amps {state2_float})")
                         prev_state2 = state2_float
+                    # Otherwise, write the new value
                     else:
-                        logger.warning("Write to the inverter failed!")
+                        write = update_inverter_register(modbus, register_addr=210, new_value=state2_float)
+                        if write == 1:
+                            logger.info(f"Write to the inverter successful, new amp now: {state2_float}")
+                            prev_state2 = state2_float
+                        else:
+                            logger.warning("Write to the inverter failed!")
+                except Exception as e:
+                    logger.error(f"Error interacting with inverter: {e}")
 
         # Pause for 1 minute
         time.sleep(60)
