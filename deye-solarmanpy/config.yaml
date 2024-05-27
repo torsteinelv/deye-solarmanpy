@@ -15,3 +15,5 @@ hassio_api: true
 schema:
   ip: "str?"
   serialnumber: "str?"
+  max_charge_amps: "int?"
+  max_charge_amps: "int?"
