@@ -1,6 +1,6 @@
 name: "deye-solarmanpy"
 description: "Addon to control deye inverters"
-version: "1.0.7"
+version: "1.0.8"
 slug: "deye-solarmanpy"
 init: false
 arch:
@@ -15,5 +15,6 @@ hassio_api: true
 schema:
   ip: "str?"
   serialnumber: "str?"
-  max_charge_amps: "int?"
-  max_charge_amps: "int?"
+  max_bat_charge_amps: "int?40"
+  min_bat_soc: "int?20"
+  max_bat_soc: "int?90"
