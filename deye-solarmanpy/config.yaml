@@ -13,7 +13,7 @@ hassio_role: default
 homeassistant_api: true
 hassio_api: true
 options:
-  max_bat_charge_amps: "40"
+  max_bat_charge_amps: "40" # max charge amps to inverter
   min_bat_soc: "20"
   max_bat_soc: "90"
 schema:
