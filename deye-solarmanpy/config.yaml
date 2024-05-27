@@ -1,6 +1,6 @@
 name: "deye-solarmanpy"
 description: "Addon to control deye inverters"
-version: "1.0.6"
+version: "1.0.7"
 slug: "deye-solarmanpy"
 init: false
 arch:
