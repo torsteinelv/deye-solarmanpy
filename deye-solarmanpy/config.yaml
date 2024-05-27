@@ -15,6 +15,6 @@ hassio_api: true
 schema:
   ip: "str?"
   serialnumber: "str?"
-  max_bat_charge_amps: "int(40)?"
-  min_bat_soc: "int(20)?"
-  max_bat_soc: "int(90)?"
+  max_bat_charge_amps: "float(1,200)?"
+  min_bat_soc: "float(1,100)?"
+  max_bat_soc: "float(1,100)?"
