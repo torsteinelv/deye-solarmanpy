@@ -3,6 +3,10 @@ description: "Addon to control deye inverters"
 version: "1.0.1"
 slug: "pysolarmanv5-proxy"
 init: false
+ports:
+  1502/tcp: 1502
+ports_description:
+  5000/tcp: Web interface and API
 arch:
   - aarch64
   - amd64
