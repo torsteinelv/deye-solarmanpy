@@ -35,7 +35,7 @@ async def handle_client(reader, writer):
     logger.info(f"{addr}: New connection")
 
     while True:
-        modbus_request = await reader.read(1024)
+        modbus_request = await reader.read(210)
         if not modbus_request:
             break
         try:
