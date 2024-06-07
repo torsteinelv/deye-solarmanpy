@@ -26,44 +26,32 @@ def get_environment_variable(key, default=None):
     return os.environ.get(key, default)
 
 async def handle_client(reader, writer):
-    try:
-        solarmanv5 = PySolarmanV5Async(
-            ip_address, serial_number, verbose=True, auto_reconnect=True
-        )
-        await solarmanv5.connect()
+    solarmanv5 = PySolarmanV5Async(
+        ip_address, serial_number, verbose=True, auto_reconnect=True
+    )
+    await solarmanv5.connect()
 
-        addr = writer.get_extra_info("peername")
-        logger.info(f"{addr}: New connection")
+    addr = writer.get_extra_info("peername")
+    logger.info(f"{addr}: New connection")
 
-        while True:
-            modbus_request = await reader.read(1024)
-            if not modbus_request:
-                break
-            try:
-                reply = await solarmanv5.send_raw_modbus_frame(modbus_request)
-                writer.write(reply)
-            except Exception as e:
-                logger.error(f"Error handling request: {e}")
-                raise  # Re-raise the exception to close the connection
-    except asyncio.CancelledError:
-        logger.info(f"{addr}: Connection forcibly closed due to cancellation")
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-    finally:
-        await writer.drain()
-        writer.close()
-        await writer.wait_closed()
-        logger.info(f"{addr}: Connection closed")
-        await solarmanv5.disconnect()
+    while True:
+        modbus_request = await reader.read(1024)
+        if not modbus_request:
+            break
+        try:
+            reply = await solarmanv5.send_raw_modbus_frame(modbus_request)
+            writer.write(reply)
+        except Exception as e:
+            logger.error(f"Error handling request: {e}")
+
+    await writer.drain()
+    logger.info(f"{addr}: Connection closed")
+    await solarmanv5.disconnect()
 
 async def run_server():
     server = await asyncio.start_server(handle_client, "0.0.0.0", 1502)
     async with server:
         await server.serve_forever()
-
-async def shutdown(server):
-    server.close()
-    await server.wait_closed()
 
 def main():
     # Define the path to the JSON file
@@ -93,16 +81,7 @@ def main():
     logger.info(f"Configuration values: Token={token}, IP={ip_address}, Serial Number={serial_number}")
 
     # Run the asyncio server
-    loop = asyncio.get_event_loop()
-    server = loop.run_until_complete(run_server())
-
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        logger.info("Received keyboard interrupt. Shutting down...")
-    finally:
-        loop.run_until_complete(shutdown(server))
-        loop.close()
+    asyncio.run(run_server())
 
 if __name__ == "__main__":
     main()
