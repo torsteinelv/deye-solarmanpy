@@ -1,10 +1,9 @@
-import requests
+import asyncio
 import os
 import sys
 import logging
-from pysolarmanv5 import PySolarmanV5
-import time
 import json
+from pysolarmanv5 import PySolarmanV5Async, V5FrameError, NoSocketAvailableError
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -26,14 +25,33 @@ def get_environment_variable(key, default=None):
     """Get environment variable with a default value."""
     return os.environ.get(key, default)
 
-def get_inverter_values(ip_address, serial_number):
-    """Get current values from the inverter."""
-    return PySolarmanV5(ip_address, serial_number, port=8899, mb_slave_id=1, verbose=False)
+async def handle_client(reader, writer):
+    solarmanv5 = PySolarmanV5Async(
+        ip_address, serial_number, verbose=True, auto_reconnect=True
+    )
+    await solarmanv5.connect()
 
-def update_inverter_register(modbus, register_addr, new_value):
-    """Update register value in the inverter."""
-    write = modbus.write_multiple_holding_registers(register_addr, values=[new_value])
-    return write
+    addr = writer.get_extra_info("peername")
+    logger.info(f"{addr}: New connection")
+
+    while True:
+        modbus_request = await reader.read(1024)
+        if not modbus_request:
+            break
+        try:
+            reply = await solarmanv5.send_raw_modbus_frame(modbus_request)
+            writer.write(reply)
+        except Exception as e:
+            logger.error(f"Error handling request: {e}")
+
+    await writer.drain()
+    logger.info(f"{addr}: Connection closed")
+    await solarmanv5.disconnect()
+
+async def run_server():
+    server = await asyncio.start_server(handle_client, "0.0.0.0", 1502)
+    async with server:
+        await server.serve_forever()
 
 def main():
     # Define the path to the JSON file
@@ -50,9 +68,10 @@ def main():
         sys.exit(1)
 
     # Access specific values from the configuration
-    token = get_environment_variable("SUPERVISOR_TOKEN")
+    global ip_address, serial_number
     ip_address = config_data.get("ip")
     serial_number = int(config_data.get("serialnumber", 0))
+    token = get_environment_variable("SUPERVISOR_TOKEN")
 
     # Check if required configuration values are present
     if not all((ip_address, serial_number, token)):
@@ -61,41 +80,8 @@ def main():
 
     logger.info(f"Configuration values: Token={token}, IP={ip_address}, Serial Number={serial_number}")
 
-    # Home Assistant REST API URL
-    url = "http://supervisor/core/api"
-import asyncio
-from pysolarmanv5 import PySolarmanV5Async, V5FrameError, NoSocketAvailableError
+    # Run the asyncio server
+    asyncio.run(run_server())
 
-
-async def handle_client(reader, writer):
-    solarmanv5 = PySolarmanV5Async(
-        ip_address, serial_number, verbose=True, auto_reconnect=True
-    )
-    await solarmanv5.connect()
-
-    addr = writer.get_extra_info("peername")
-
-    print(f"{addr}: New connection")
-
-    while True:
-        modbus_request = await reader.read(1024)
-        if not modbus_request:
-            break
-        try:
-            reply = await solarmanv5.send_raw_modbus_frame(modbus_request)
-            writer.write(reply)
-        except:
-            pass
-
-    await writer.drain()
-    print(f"{addr}: Connection closed")
-    await solarmanv5.disconnect()
-
-
-async def run_server():
-    server = await asyncio.start_server(handle_client, "0.0.0.0", 1502)
-    async with server:
-        await server.serve_forever()
-
-
-asyncio.run(run_server())
+if __name__ == "__main__":
+    main()
