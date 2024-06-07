@@ -18,5 +18,8 @@ COPY script.py /
 COPY run.sh /
 RUN chmod a+x /script.py /run.sh
 
+# Define an environment variable
+ENV SUPERVISOR_TOKEN=${SUPERVISOR_TOKEN}
+
 # Start the shell script
 CMD ["/run.sh"]
