@@ -34,19 +34,25 @@ async def handle_client(reader, writer):
     addr = writer.get_extra_info("peername")
     logger.info(f"{addr}: New connection")
 
-    while True:
-        modbus_request = await reader.read(1024)
-        if not modbus_request:
-            break
-        try:
-            reply = await solarmanv5.send_raw_modbus_frame(modbus_request)
-            writer.write(reply)
-        except Exception as e:
-            logger.error(f"Error handling request: {e}")
+    try:
+        while True:
+            modbus_request = await reader.read(1024)
+            if not modbus_request:
+                break
+            try:
+                reply = await solarmanv5.send_raw_modbus_frame(modbus_request)
+                writer.write(reply)
+            except Exception as e:
+                logger.error(f"Error handling request: {e}")
 
-    await writer.drain()
-    logger.info(f"{addr}: Connection closed")
-    await solarmanv5.disconnect()
+        await writer.drain()
+    except asyncio.CancelledError:
+        logger.info(f"{addr}: Connection cancelled")
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+    finally:
+        logger.info(f"{addr}: Connection closed")
+        await solarmanv5.disconnect()
 
 async def run_server():
     server = await asyncio.start_server(handle_client, "0.0.0.0", 1502)
