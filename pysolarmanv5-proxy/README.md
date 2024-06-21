@@ -5,7 +5,7 @@ This repository contains the configuration and script setup for integrating Deye
 ## Prerequisites
 
 - Home Assistant
-- Deye inverter
+- Uses pysolarmanv5
 - Solarman data logger
 
 ## Installation
