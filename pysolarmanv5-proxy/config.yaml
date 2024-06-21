@@ -1,6 +1,6 @@
 name: "pysolarmanv5-proxy"
 description: "Addon to control deye inverters"
-version: "1.0.7"
+version: "1.0.8"
 slug: "pysolarmanv5-proxy"
 init: false
 ports:
