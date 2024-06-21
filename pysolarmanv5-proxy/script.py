@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 # Log to stdout with a simple format
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levellevelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
@@ -40,17 +40,11 @@ async def handle_client(reader, writer):
             if not modbus_request:
                 break
             try:
-                # Implementing a retry mechanism
-                for attempt in range(3):
-                    try:
-                        reply = await solarmanv5.send_raw_modbus_frame(modbus_request)
-                        writer.write(reply)
-                        break
-                    except (V5FrameError, NoSocketAvailableError) as e:
-                        logger.error(f"Attempt {attempt + 1}: Error handling request: {e}")
-                        await asyncio.sleep(1)  # Small delay before retry
-                else:
-                    logger.error(f"Failed to handle request after {attempt + 1} attempts.")
+                reply = await solarmanv5.send_raw_modbus_frame(modbus_request)
+                writer.write(reply)
+            except (V5FrameError, NoSocketAvailableError) as e:
+                logger.error(f"Error handling request: {e}")
+                await asyncio.sleep(1)  # Retry after a delay
             except Exception as e:
                 logger.error(f"Unexpected error: {e}")
 
