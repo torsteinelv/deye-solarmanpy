@@ -27,7 +27,7 @@ def get_environment_variable(key, default=None):
 
 async def handle_client(reader, writer):
     solarmanv5 = PySolarmanV5Async(
-        ip_address, serial_number, mb_slave_id=1, port=8899, verbose=True, auto_reconnect=True
+        ip_address, serial_number, port=8899, verbose=True, auto_reconnect=True
     )
     await solarmanv5.connect()
 
