@@ -10,14 +10,9 @@ This repository contains the configuration and script setup for integrating Deye
 
 ## Installation
 
-1. **Clone the repository:**
 
-    ```bash
-    git clone https://github.com/your-username/your-repo.git
-    cd your-repo
-    ```
 
-2. **Update the configuration:**
+1. **Update the configuration:**
 
     Ensure your `configuration.yaml` includes the Modbus setup:
 
@@ -37,7 +32,7 @@ This repository contains the configuration and script setup for integrating Deye
           scan_interval: 60
     ```
 
-3. **Add the automation script:**
+2. **Add the automation script:**
 
     In your `scripts.yaml` file, add the following script to write to the Modbus register:
 
